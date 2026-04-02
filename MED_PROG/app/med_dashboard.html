@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Дашборд учёта лекарств</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: #eef3fc;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+            padding: 24px;
+        }
+        h1 {
+            font-size: 2rem;
+            color: #1a4d8c;
+            text-align: center;
+            margin-top: 0;
+        }
+        .fullscreen-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2c7be5;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: 0.2s;
+        }
+        .fullscreen-btn:hover {
+            background: #1a5bbf;
+            transform: scale(1.02);
+        }
+        .drug-card {
+            background: #ffffff;
+            border: 2px solid #cfe3ff;
+            border-radius: 28px;
+            padding: 20px;
+            margin-bottom: 24px;
+            transition: 0.2s;
+        }
+        .drug-card:hover {
+            border-color: #6ea8fe;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .drug-name {
+            flex: 3;
+            min-width: 200px;
+        }
+        .drug-name input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 1.1rem;
+            border: 2px solid #ccc;
+            border-radius: 40px;
+        }
+        .delete-btn {
+            background: #ffe6e6;
+            border: none;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #c00;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .dosage-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+            background: #f9fcff;
+            padding: 16px;
+            border-radius: 24px;
+        }
+        .time-field {
+            flex: 1;
+            min-width: 100px;
+            text-align: center;
+        }
+        .time-field label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .time-field input {
+            width: 100%;
+            padding: 10px;
+            font-size: 1.1rem;
+            text-align: center;
+            border: 2px solid #ccdbe9;
+            border-radius: 48px;
+        }
+        .gram-display {
+            font-size: 0.9rem;
+            color: #2c7be5;
+            margin-top: 5px;
+            font-weight: normal;
+        }
+        .params {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 20px;
+        }
+        .param {
+            flex: 1;
+            min-width: 150px;
+        }
+        .param label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        .param input {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            border: 2px solid #ccdbe9;
+            border-radius: 48px;
+        }
+        .total-gram {
+            background: #e8f0fe;
+            padding: 8px 12px;
+            border-radius: 20px;
+            margin-top: 10px;
+            text-align: center;
+            font-weight: bold;
+            color: #1a4d8c;
+        }
+        .buttons-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 16px;
+            margin: 32px 0 24px;
+        }
+        button {
+            font-size: 1.1rem;
+            padding: 12px 28px;
+            border: none;
+            border-radius: 60px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: #2c7be5;
+            color: white;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #2c2c2c;
+        }
+        .results {
+            background: #e8f0fe;
+            border-radius: 28px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .result-card {
+            background: white;
+            border-left: 10px solid #2c7be5;
+            border-radius: 24px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+        .result-card strong {
+            font-size: 1.2rem;
+            color: #1a4d8c;
+        }
+        .badge {
+            background: #d4edff;
+            border-radius: 40px;
+            padding: 6px 14px;
+            display: inline-block;
+            margin-top: 8px;
+        }
+        @media (max-width: 700px) {
+            .container { padding: 16px; }
+            .dosage-group, .params { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>💊 Дашборд учёта лекарств</h1>
+    <p style="text-align:center;">➕ Добавляйте лекарства, указывайте приём (утро/день/вечер) в таблетках — автоматически покажется доза в граммах.</p>
+
+    <div id="drugs-container"></div>
+
+    <div class="buttons-bar">
+        <button id="add-btn" class="btn-success">➕ Добавить лекарство</button>
+        <button id="calc-btn" class="btn-primary">🧮 Рассчитать запас</button>
+        <button id="reset-btn" class="btn-warning">🗑 Сбросить все</button>
+    </div>
+
+    <div id="results" class="results">
+        <h3>📊 Результат расчёта</h3>
+        <div id="results-list">Нажмите «Рассчитать».</div>
+    </div>
+</div>
+<button class="fullscreen-btn" id="fullscreenBtn">🖥️ На весь экран</button>
+
+<script>
+    let drugCounter = 0;
+
+    // Функция обновления отображения граммов для одной карточки
+    function updateGrams(card) {
+        const mg = parseFloat(card.querySelector('.mg').value) || 0;
+        const morning = parseInt(card.querySelector('.morning').value) || 0;
+        const afternoon = parseInt(card.querySelector('.afternoon').value) || 0;
+        const evening = parseInt(card.querySelector('.evening').value) || 0;
+
+        const morningGram = (morning * mg / 1000).toFixed(3);
+        const afternoonGram = (afternoon * mg / 1000).toFixed(3);
+        const eveningGram = (evening * mg / 1000).toFixed(3);
+        const totalGram = ((morning + afternoon + evening) * mg / 1000).toFixed(3);
+
+        card.querySelector('.morning-gram').textContent = morningGram;
+        card.querySelector('.afternoon-gram').textContent = afternoonGram;
+        card.querySelector('.evening-gram').textContent = eveningGram;
+        card.querySelector('.total-gram-value').textContent = totalGram;
+    }
+
+    function createDrugCard(id = null) {
+        const uniqueId = id !== null ? id : drugCounter++;
+        const card = document.createElement('div');
+        card.className = 'drug-card';
+        card.dataset.id = uniqueId;
+        card.innerHTML = `
+            <div class="card-header">
+                <div class="drug-name">
+                    <input type="text" placeholder="Название лекарства" value="Лекарство ${uniqueId+1}">
+                </div>
+                <button class="delete-btn" title="Удалить">✖</button>
+            </div>
+            <div class="dosage-group">
+                <div class="time-field">
+                    <label>🌅 Утро</label>
+                    <input type="number" value="0" min="0" step="1" class="morning">
+                    <div class="gram-display">⚖️ <span class="morning-gram">0.000</span> г</div>
+                </div>
+                <div class="time-field">
+                    <label>☀️ День</label>
+                    <input type="number" value="0" min="0" step="1" class="afternoon">
+                    <div class="gram-display">⚖️ <span class="afternoon-gram">0.000</span> г</div>
+                </div>
+                <div class="time-field">
+                    <label>🌙 Вечер</label>
+                    <input type="number" value="0" min="0" step="1" class="evening">
+                    <div class="gram-display">⚖️ <span class="evening-gram">0.000</span> г</div>
+                </div>
+            </div>
+            <div class="params">
+                <div class="param">
+                    <label>💊 Граммовка (мг на таблетку)</label>
+                    <input type="number" value="500" min="0" step="0.1" class="mg">
+                </div>
+                <div class="param">
+                    <label>📦 Ёмкость упаковки (таблеток)</label>
+                    <input type="number" value="30" min="1" step="1" class="capacity">
+                </div>
+                <div class="param">
+                    <label>📅 Дата закупки</label>
+                    <input type="date" class="purchase-date" value="${new Date().toISOString().slice(0,10)}">
+                </div>
+            </div>
+            <div class="total-gram">
+                💊 <strong>Употребляемых грамм в сутки:</strong> <span class="total-gram-value">0.000</span> г
+            </div>
+            <hr>
+        `;
+
+        // Навешиваем события для обновления граммов при изменении полей
+        const morningInput = card.querySelector('.morning');
+        const afternoonInput = card.querySelector('.afternoon');
+        const eveningInput = card.querySelector('.evening');
+        const mgInput = card.querySelector('.mg');
+
+        const updateHandler = () => updateGrams(card);
+        morningInput.addEventListener('input', updateHandler);
+        afternoonInput.addEventListener('input', updateHandler);
+        eveningInput.addEventListener('input', updateHandler);
+        mgInput.addEventListener('input', updateHandler);
+
+        // Удаление карточки
+        card.querySelector('.delete-btn').addEventListener('click', () => card.remove());
+
+        // Первичный расчёт граммов
+        updateGrams(card);
+
+        return card;
+    }
+
+    const container = document.getElementById('drugs-container');
+    function addDrug() {
+        container.appendChild(createDrugCard());
+    }
+
+    document.getElementById('add-btn').addEventListener('click', addDrug);
+    document.getElementById('reset-btn').addEventListener('click', () => {
+        container.innerHTML = '';
+        drugCounter = 0;
+        addDrug();
+        document.getElementById('results-list').innerHTML = 'Нажмите «Рассчитать».';
+    });
+
+    function calculateAll() {
+        const cards = document.querySelectorAll('.drug-card');
+        if (cards.length === 0) {
+            document.getElementById('results-list').innerHTML = '<p>❌ Нет лекарств. Добавьте.</p>';
+            return;
+        }
+        let html = '';
+        for (let card of cards) {
+            const name = card.querySelector('.drug-name input').value.trim() || 'Без названия';
+            const morning = parseInt(card.querySelector('.morning').value) || 0;
+            const afternoon = parseInt(card.querySelector('.afternoon').value) || 0;
+            const evening = parseInt(card.querySelector('.evening').value) || 0;
+            const totalPerDay = morning + afternoon + evening;
+            const mg = parseFloat(card.querySelector('.mg').value) || 0;
+            const capacity = parseInt(card.querySelector('.capacity').value) || 0;
+            const purchaseDateStr = card.querySelector('.purchase-date').value;
+
+            // Граммы для информации
+            const morningGram = (morning * mg / 1000).toFixed(3);
+            const afternoonGram = (afternoon * mg / 1000).toFixed(3);
+            const eveningGram = (evening * mg / 1000).toFixed(3);
+            const totalGram = (totalPerDay * mg / 1000).toFixed(3);
+
+            if (capacity <= 0) {
+                html += `<div class="result-card" style="border-left-color:#dc3545;"><strong>⚠️ ${name}</strong><br>Ошибка: ёмкость должна быть >0</div>`;
+                continue;
+            }
+            let daysText = '', endText = '';
+            if (totalPerDay === 0) {
+                daysText = '♾️ Бесконечно (нет приёма)';
+            } else {
+                const days = capacity / totalPerDay;
+                daysText = days.toFixed(1) + ' дней';
+                if (purchaseDateStr) {
+                    const purchaseDate = new Date(purchaseDateStr);
+                    if (!isNaN(purchaseDate.getTime())) {
+                        const endDate = new Date(purchaseDate);
+                        endDate.setDate(purchaseDate.getDate() + Math.floor(days));
+                        endText = ` — закончится ${endDate.toLocaleDateString('ru-RU')}`;
+                    }
+                }
+            }
+            html += `<div class="result-card">
+                        <strong>💊 ${name}</strong><br>
+                        <span class="badge">${mg.toFixed(2)} мг/таб, ${capacity} таб. в уп.</span><br>
+                        📅 Приём в таблетках: утро ${morning}, день ${afternoon}, вечер ${evening} → ${totalPerDay} таб./день<br>
+                        ⚖️ Употребляемых грамм: утро ${morningGram} г, день ${afternoonGram} г, вечер ${eveningGram} г → <b>${totalGram} г/сутки</b><br>
+                        ⏳ Хватит на: <b>${daysText}</b>${endText}
+                    </div>`;
+        }
+        document.getElementById('results-list').innerHTML = html;
+    }
+
+    document.getElementById('calc-btn').addEventListener('click', calculateAll);
+
+    // Полноэкранный режим
+    const fullBtn = document.getElementById('fullscreenBtn');
+    fullBtn.addEventListener('click', () => {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) elem.requestFullscreen();
+        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+        else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+    });
+
+    // Добавляем первую карточку
+    addDrug();
+</script>
+</body>
+</html>
